@@ -195,8 +195,9 @@ func (m model) Init() tea.Cmd {
 			log.Error("unable to read file", "file", m.common.cfg.Path, "error", err)
 			return func() tea.Msg { return errMsg{err} }
 		}
+		m.pager.preprocessedMarkdown = "" // Clear cache for new document
 		body := string(utils.RemoveFrontmatter(content))
-		cmds = append(cmds, renderWithGlamour(m.pager, body))
+		cmds = append(cmds, renderWithGlamour(&m.pager, body))
 	}
 
 	return tea.Batch(cmds...)
@@ -275,8 +276,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fetchedMarkdownMsg:
 		// We've loaded a markdown file's contents for rendering
 		m.pager.currentDocument = *msg
+		m.pager.preprocessedMarkdown = "" // Clear cache for new document
 		body := string(utils.RemoveFrontmatter([]byte(msg.Body)))
-		cmds = append(cmds, renderWithGlamour(m.pager, body))
+		cmds = append(cmds, renderWithGlamour(&m.pager, body))
 
 	case contentRenderedMsg:
 		m.state = stateShowDocument

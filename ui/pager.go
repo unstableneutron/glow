@@ -102,6 +102,11 @@ type pagerModel struct {
 	// it here so we can re-render it on resize.
 	currentDocument markdown
 
+	// Cached preprocessed markdown (with mermaid blocks already rendered).
+	// This avoids re-running mermaid preprocessing on every glamour re-render.
+	preprocessedMarkdown string
+	preprocessedIsCode   bool
+
 	watcher *fsnotify.Watcher
 }
 
@@ -175,6 +180,7 @@ func (m *pagerModel) unload() {
 	m.state = pagerStateBrowse
 	m.viewport.SetContent("")
 	m.viewport.YOffset = 0
+	m.preprocessedMarkdown = "" // Clear cache
 	m.unwatchFile()
 }
 
@@ -267,7 +273,7 @@ func (m pagerModel) update(msg tea.Msg) (pagerModel, tea.Cmd) {
 	// We've received terminal dimensions, either for the first time or
 	// after a resize
 	case tea.WindowSizeMsg:
-		return m, renderWithGlamour(m, m.currentDocument.Body)
+		return m, renderWithGlamour(&m, m.currentDocument.Body)
 
 	case statusMessageTimeoutMsg:
 		m.state = pagerStateBrowse
@@ -407,7 +413,7 @@ func (m pagerModel) helpView() (s string) {
 
 // COMMANDS
 
-func renderWithGlamour(m pagerModel, md string) tea.Cmd {
+func renderWithGlamour(m *pagerModel, md string) tea.Cmd {
 	return func() tea.Msg {
 		s, err := glamourRender(m, md)
 		if err != nil {
@@ -419,7 +425,7 @@ func renderWithGlamour(m pagerModel, md string) tea.Cmd {
 }
 
 // This is where the magic happens.
-func glamourRender(m pagerModel, markdown string) (string, error) {
+func glamourRender(m *pagerModel, markdown string) (string, error) {
 	trunc := lipgloss.NewStyle().MaxWidth(m.viewport.Width - lineNumberWidth).Render
 
 	if !config.GlamourEnabled {
@@ -445,13 +451,18 @@ func glamourRender(m pagerModel, markdown string) (string, error) {
 		return "", fmt.Errorf("error creating glamour renderer: %w", err)
 	}
 
-	if isCode {
-		markdown = utils.WrapCodeBlock(markdown, filepath.Ext(m.currentDocument.Note))
-	}
-
-	// Preprocess mermaid blocks if rendering a markdown file
-	if !isCode {
-		markdown = utils.RenderMermaidBlocks(markdown, m.common.cfg.RenderMermaid)
+	// Use cached preprocessed markdown if available and mode matches
+	if m.preprocessedMarkdown != "" && m.preprocessedIsCode == isCode {
+		markdown = m.preprocessedMarkdown
+	} else {
+		// Preprocess and cache
+		if isCode {
+			markdown = utils.WrapCodeBlock(markdown, filepath.Ext(m.currentDocument.Note))
+		} else {
+			markdown = utils.RenderMermaidBlocks(markdown, m.common.cfg.RenderMermaid)
+		}
+		m.preprocessedMarkdown = markdown
+		m.preprocessedIsCode = isCode
 	}
 
 	out, err := r.Render(markdown)
