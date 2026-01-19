@@ -42,6 +42,7 @@ var (
 	showLineNumbers  bool
 	preserveNewLines bool
 	mouse            bool
+	renderMermaid    string
 
 	rootCmd = &cobra.Command{
 		Use:   "glow [SOURCE|DIR]",
@@ -171,6 +172,10 @@ func validateOptions(cmd *cobra.Command) error {
 	showAllFiles = viper.GetBool("all")
 	preserveNewLines = viper.GetBool("preserveNewLines")
 	showLineNumbers = viper.GetBool("showLineNumbers")
+	renderMermaid = viper.GetString("renderMermaid")
+	if renderMermaid != "plain" && renderMermaid != "ascii" {
+		return fmt.Errorf("invalid --render-mermaid value: %s (must be plain or ascii)", renderMermaid)
+	}
 
 	if pager && tui {
 		return errors.New("cannot use both pager and tui")
@@ -306,6 +311,11 @@ func executeCLI(cmd *cobra.Command, src *source, w io.Writer) error {
 		content = utils.WrapCodeBlock(string(b), ext)
 	}
 
+	// Preprocess mermaid blocks if rendering a markdown file
+	if !isCode {
+		content = utils.RenderMermaidBlocks(content, renderMermaid)
+	}
+
 	out, err := r.Render(content)
 	if err != nil {
 		return fmt.Errorf("unable to render markdown: %w", err)
@@ -404,6 +414,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&preserveNewLines, "preserve-new-lines", "n", false, "preserve newlines in the output")
 	rootCmd.Flags().BoolVarP(&mouse, "mouse", "m", false, "enable mouse wheel (TUI-mode only)")
 	_ = rootCmd.Flags().MarkHidden("mouse")
+	rootCmd.Flags().StringVar(&renderMermaid, "render-mermaid", "plain", "render mermaid diagrams: plain (default) or ascii")
 
 	// Config bindings
 	_ = viper.BindPFlag("pager", rootCmd.Flags().Lookup("pager"))
@@ -415,10 +426,12 @@ func init() {
 	_ = viper.BindPFlag("preserveNewLines", rootCmd.Flags().Lookup("preserve-new-lines"))
 	_ = viper.BindPFlag("showLineNumbers", rootCmd.Flags().Lookup("line-numbers"))
 	_ = viper.BindPFlag("all", rootCmd.Flags().Lookup("all"))
+	_ = viper.BindPFlag("renderMermaid", rootCmd.Flags().Lookup("render-mermaid"))
 
 	viper.SetDefault("style", styles.AutoStyle)
 	viper.SetDefault("width", 0)
 	viper.SetDefault("all", true)
+	viper.SetDefault("renderMermaid", "plain")
 
 	rootCmd.AddCommand(configCmd, manCmd)
 }
