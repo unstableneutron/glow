@@ -163,6 +163,16 @@ glow -w 60
 CLI output can be displayed in your preferred pager with the `-p` flag. This defaults
 to the ANSI-aware `less -r` if `$PAGER` is not explicitly set.
 
+### Mermaid Diagrams
+
+Render mermaid code blocks as ASCII diagrams:
+
+```bash
+glow --render-mermaid=ascii README.md
+```
+
+By default (`--render-mermaid=plain`), mermaid blocks are shown as regular code blocks.
+
 ### Styles
 
 You can choose a style with the `-s` flag. When no flag is provided `glow` tries
