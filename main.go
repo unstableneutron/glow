@@ -369,6 +369,7 @@ func runTUI(path string, content string) error {
 	cfg.GlamourMaxWidth = width
 	cfg.EnableMouse = mouse
 	cfg.PreserveNewLines = preserveNewLines
+	cfg.RenderMermaid = renderMermaid
 
 	// Run Bubble Tea program
 	if _, err := ui.NewProgram(cfg, content).Run(); err != nil {

@@ -449,6 +449,11 @@ func glamourRender(m pagerModel, markdown string) (string, error) {
 		markdown = utils.WrapCodeBlock(markdown, filepath.Ext(m.currentDocument.Note))
 	}
 
+	// Preprocess mermaid blocks if rendering a markdown file
+	if !isCode {
+		markdown = utils.RenderMermaidBlocks(markdown, m.common.cfg.RenderMermaid)
+	}
+
 	out, err := r.Render(markdown)
 	if err != nil {
 		return "", fmt.Errorf("error rendering markdown: %w", err)
