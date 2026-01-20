@@ -14,24 +14,29 @@ func TestRenderMermaidFlag(t *testing.T) {
 		{
 			name:     "default value",
 			args:     []string{},
-			expected: "plain",
+			expected: "unicode",
 		},
 		{
-			name:     "explicit plain",
-			args:     []string{"--render-mermaid", "plain"},
-			expected: "plain",
+			name:     "explicit raw",
+			args:     []string{"--render-mermaid", "raw"},
+			expected: "raw",
 		},
 		{
 			name:     "ascii mode",
 			args:     []string{"--render-mermaid", "ascii"},
 			expected: "ascii",
 		},
+		{
+			name:     "unicode mode",
+			args:     []string{"--render-mermaid", "unicode"},
+			expected: "unicode",
+		},
 	}
 
 	for _, v := range tt {
 		t.Run(v.name, func(t *testing.T) {
 			// Reset flag to default before each test
-			if err := rootCmd.Flags().Set("render-mermaid", "plain"); err != nil {
+			if err := rootCmd.Flags().Set("render-mermaid", "unicode"); err != nil {
 				t.Fatalf("failed to reset flag: %v", err)
 			}
 
@@ -49,7 +54,7 @@ func TestRenderMermaidFlag(t *testing.T) {
 func TestRenderMermaidValidation(t *testing.T) {
 	// Reset flag to default after test
 	t.Cleanup(func() {
-		_ = rootCmd.Flags().Set("render-mermaid", "plain")
+		_ = rootCmd.Flags().Set("render-mermaid", "unicode")
 	})
 
 	// Set an invalid value

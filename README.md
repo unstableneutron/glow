@@ -171,7 +171,8 @@ Render mermaid code blocks as ASCII diagrams:
 glow --render-mermaid=ascii README.md
 ```
 
-By default (`--render-mermaid=plain`), mermaid blocks are shown as regular code blocks.
+By default (`--render-mermaid=unicode`), mermaid blocks are rendered with Unicode
+box-drawing characters. Use `--render-mermaid=raw` to keep the original code blocks.
 
 ### Styles
 

@@ -6,14 +6,20 @@ import (
 	mermaidcmd "github.com/AlexanderGrooff/mermaid-ascii/cmd"
 )
 
-// RenderMermaidBlocks processes markdown content and renders mermaid code blocks
-// as ASCII diagrams when mode is "ascii". When mode is "plain", returns content unchanged.
+// RenderMermaidBlocks processes markdown content and renders mermaid code blocks.
+// Mode "raw" returns content unchanged; "ascii" and "unicode" render diagrams.
 func RenderMermaidBlocks(content string, mode string, maxWidth int) string {
-	if mode != "ascii" || content == "" {
+	if content == "" {
 		return content
 	}
 
-	return processMermaidBlocks(content, maxWidth)
+	mode = strings.ToLower(mode)
+	if mode == "raw" {
+		return content
+	}
+
+	useAscii := mode == "ascii"
+	return processMermaidBlocks(content, maxWidth, useAscii)
 }
 
 // fencedBlock represents a parsed fenced code block.
@@ -29,7 +35,7 @@ type fencedBlock struct {
 
 // processMermaidBlocks uses a line-scanner to find and replace mermaid blocks.
 // This correctly handles nested fences, indentation, and CRLF line endings.
-func processMermaidBlocks(content string, maxWidth int) string {
+func processMermaidBlocks(content string, maxWidth int, useAscii bool) string {
 	// First check if we have any mermaid blocks before normalizing
 	// Normalize CRLF to LF for consistent processing
 	normalized := strings.ReplaceAll(content, "\r\n", "\n")
@@ -45,7 +51,7 @@ func processMermaidBlocks(content string, maxWidth int) string {
 	// Process blocks in reverse order to preserve line indices
 	for i := len(blocks) - 1; i >= 0; i-- {
 		block := blocks[i]
-		rendered := renderMermaidBlock(block, maxWidth)
+		rendered := renderMermaidBlock(block, maxWidth, useAscii)
 		lines = replaceLines(lines, block.startLine, block.endLine, rendered)
 	}
 
@@ -167,7 +173,7 @@ func parseFenceLine(line string) (indent string, char rune, length int, info str
 }
 
 // renderMermaidBlock renders a mermaid block to ASCII and returns replacement lines.
-func renderMermaidBlock(block fencedBlock, maxWidth int) []string {
+func renderMermaidBlock(block fencedBlock, maxWidth int, useAscii bool) []string {
 	availableWidth := maxWidth
 	if availableWidth > 0 {
 		availableWidth -= len(block.indentPrefix)
@@ -178,11 +184,11 @@ func renderMermaidBlock(block fencedBlock, maxWidth int) []string {
 			availableWidth = 0
 		}
 	}
-	rendered, err := mermaidcmd.RenderDiagramWithOptions(
-		block.content,
-		mermaidcmd.WithAscii(),
-		mermaidcmd.WithMaxWidth(availableWidth),
-	)
+	options := []mermaidcmd.RenderOption{mermaidcmd.WithMaxWidth(availableWidth)}
+	if useAscii {
+		options = append(options, mermaidcmd.WithAscii())
+	}
+	rendered, err := mermaidcmd.RenderDiagramWithOptions(block.content, options...)
 	if err != nil {
 		// On error, show visible error message and keep original block
 		var result []string

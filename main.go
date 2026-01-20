@@ -173,8 +173,8 @@ func validateOptions(cmd *cobra.Command) error {
 	preserveNewLines = viper.GetBool("preserveNewLines")
 	showLineNumbers = viper.GetBool("showLineNumbers")
 	renderMermaid = viper.GetString("renderMermaid")
-	if renderMermaid != "plain" && renderMermaid != "ascii" {
-		return fmt.Errorf("invalid --render-mermaid value: %s (must be plain or ascii)", renderMermaid)
+	if renderMermaid != "raw" && renderMermaid != "ascii" && renderMermaid != "unicode" {
+		return fmt.Errorf("invalid --render-mermaid value: %s (must be raw, ascii, or unicode)", renderMermaid)
 	}
 
 	if pager && tui {
@@ -415,7 +415,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&preserveNewLines, "preserve-new-lines", "n", false, "preserve newlines in the output")
 	rootCmd.Flags().BoolVarP(&mouse, "mouse", "m", false, "enable mouse wheel (TUI-mode only)")
 	_ = rootCmd.Flags().MarkHidden("mouse")
-	rootCmd.Flags().StringVar(&renderMermaid, "render-mermaid", "plain", "render mermaid diagrams: plain (default) or ascii")
+	rootCmd.Flags().StringVar(&renderMermaid, "render-mermaid", "unicode", "render mermaid diagrams: raw, ascii, or unicode (default)")
 
 	// Config bindings
 	_ = viper.BindPFlag("pager", rootCmd.Flags().Lookup("pager"))
@@ -432,7 +432,7 @@ func init() {
 	viper.SetDefault("style", styles.AutoStyle)
 	viper.SetDefault("width", 0)
 	viper.SetDefault("all", true)
-	viper.SetDefault("renderMermaid", "plain")
+	viper.SetDefault("renderMermaid", "unicode")
 
 	rootCmd.AddCommand(configCmd, manCmd)
 }

@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestRenderMermaidBlocks_PlainMode(t *testing.T) {
+func TestRenderMermaidBlocks_RawMode(t *testing.T) {
 	input := "# Hello\n\n```mermaid\ngraph LR\nA --> B\n```\n\nMore text"
-	result := RenderMermaidBlocks(input, "plain", 0)
+	result := RenderMermaidBlocks(input, "raw", 0)
 	if result != input {
-		t.Errorf("plain mode should return input unchanged\ngot: %s\nwant: %s", result, input)
+		t.Errorf("raw mode should return input unchanged\ngot: %s\nwant: %s", result, input)
 	}
 }
 
@@ -31,6 +31,18 @@ func TestRenderMermaidBlocks_AsciiMode_SimpleGraph(t *testing.T) {
 	// Should contain box-drawing characters (the rendered diagram)
 	if !strings.Contains(result, "─") && !strings.Contains(result, "-") {
 		t.Error("should contain rendered diagram with box characters")
+	}
+}
+
+func TestRenderMermaidBlocks_UnicodeMode_SimpleGraph(t *testing.T) {
+	input := "# Hello\n\n```mermaid\ngraph LR\nA --> B\n```\n\nMore text"
+	result := RenderMermaidBlocks(input, "unicode", 0)
+
+	if strings.Contains(result, "```mermaid") {
+		t.Error("unicode mode should replace mermaid blocks")
+	}
+	if !strings.Contains(result, "─") {
+		t.Error("unicode mode should contain box-drawing characters")
 	}
 }
 
