@@ -8,12 +8,12 @@ import (
 
 // RenderMermaidBlocks processes markdown content and renders mermaid code blocks
 // as ASCII diagrams when mode is "ascii". When mode is "plain", returns content unchanged.
-func RenderMermaidBlocks(content string, mode string) string {
+func RenderMermaidBlocks(content string, mode string, maxWidth int) string {
 	if mode != "ascii" || content == "" {
 		return content
 	}
 
-	return processMermaidBlocks(content)
+	return processMermaidBlocks(content, maxWidth)
 }
 
 // fencedBlock represents a parsed fenced code block.
@@ -29,7 +29,7 @@ type fencedBlock struct {
 
 // processMermaidBlocks uses a line-scanner to find and replace mermaid blocks.
 // This correctly handles nested fences, indentation, and CRLF line endings.
-func processMermaidBlocks(content string) string {
+func processMermaidBlocks(content string, maxWidth int) string {
 	// First check if we have any mermaid blocks before normalizing
 	// Normalize CRLF to LF for consistent processing
 	normalized := strings.ReplaceAll(content, "\r\n", "\n")
@@ -45,7 +45,7 @@ func processMermaidBlocks(content string) string {
 	// Process blocks in reverse order to preserve line indices
 	for i := len(blocks) - 1; i >= 0; i-- {
 		block := blocks[i]
-		rendered := renderMermaidBlock(block)
+		rendered := renderMermaidBlock(block, maxWidth)
 		lines = replaceLines(lines, block.startLine, block.endLine, rendered)
 	}
 
@@ -167,8 +167,22 @@ func parseFenceLine(line string) (indent string, char rune, length int, info str
 }
 
 // renderMermaidBlock renders a mermaid block to ASCII and returns replacement lines.
-func renderMermaidBlock(block fencedBlock) []string {
-	rendered, err := mermaidcmd.RenderDiagram(block.content, nil)
+func renderMermaidBlock(block fencedBlock, maxWidth int) []string {
+	availableWidth := maxWidth
+	if availableWidth > 0 {
+		availableWidth -= len(block.indentPrefix)
+		const codeBlockMargin = 4
+		if availableWidth > codeBlockMargin {
+			availableWidth -= codeBlockMargin
+		} else {
+			availableWidth = 0
+		}
+	}
+	rendered, err := mermaidcmd.RenderDiagramWithOptions(
+		block.content,
+		mermaidcmd.WithAscii(),
+		mermaidcmd.WithMaxWidth(availableWidth),
+	)
 	if err != nil {
 		// On error, show visible error message and keep original block
 		var result []string

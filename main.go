@@ -313,7 +313,7 @@ func executeCLI(cmd *cobra.Command, src *source, w io.Writer) error {
 
 	// Preprocess mermaid blocks if rendering a markdown file
 	if !isCode {
-		content = utils.RenderMermaidBlocks(content, renderMermaid)
+		content = utils.RenderMermaidBlocks(content, renderMermaid, int(width))
 	}
 
 	out, err := r.Render(content)

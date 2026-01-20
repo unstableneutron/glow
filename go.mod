@@ -5,6 +5,7 @@ go 1.24.0
 toolchain go1.24.1
 
 require (
+	github.com/AlexanderGrooff/mermaid-ascii v0.0.0-20260113225813-dc0429eef2d2
 	github.com/atotto/clipboard v0.1.4
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/charmbracelet/bubbles v0.21.0
@@ -32,7 +33,6 @@ require (
 )
 
 require (
-	github.com/AlexanderGrooff/mermaid-ascii v0.0.0-20260113225813-dc0429eef2d2 // indirect
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -99,3 +99,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/AlexanderGrooff/mermaid-ascii => github.com/unstableneutron/mermaid-ascii v0.0.0-20260120112517-a2fb25163453
